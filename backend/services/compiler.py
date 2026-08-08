@@ -500,14 +500,6 @@ class CompilerService:
             raw_log = output + error_output
             logs = self._parse_latex_output(raw_log)
 
-            # XeLaTeX/xdvipdfmx may write normal progress to stderr; only
-            # classify stderr as an error when the process itself failed.
-            if error_output.strip() and process.returncode != 0:
-                logs.append(CompileLogEntry(
-                    level="error",
-                    message=error_output.strip()
-                ))
-
             # 若 latexmk 因快取記錄前次失敗而拒絕執行（exit 12 + "gave an error in previous invocation"），
             # 自動刪除 .fdb_latexmk 並重試一次
             if (process.returncode == 12
@@ -532,6 +524,19 @@ class CompilerService:
                 error_output = (stderr2 or b"").decode("utf-8", errors="ignore")
                 raw_log = output + error_output
                 logs = self._parse_latex_output(raw_log)
+
+            # XeLaTeX 的 xdvipdfmx 會把正常進度（"main.xdv -> main.pdf"、
+            # "2727 bytes written"）寫到 stderr，所以編譯失敗時整包 stderr 並不等於
+            # 錯誤訊息。只在解析不出任何真正的錯誤時，才拿它當後援——這樣
+            # "xelatex: command not found" 之類的工具鏈失敗仍看得到，
+            # 而使用者不會在真正的 LaTeX 錯誤旁邊看到一堆雜訊。
+            if (process.returncode != 0
+                    and error_output.strip()
+                    and not any(entry.level == "error" for entry in logs)):
+                logs.append(CompileLogEntry(
+                    level="error",
+                    message=error_output.strip()
+                ))
 
             # 檢查退出碼
             if process.returncode != 0:
@@ -662,10 +667,22 @@ class CompilerService:
         line_pattern = re.compile(r'l\.(\d+)')
         open_file_pattern = re.compile(r'\(([^()\s]+\.tex)\b')
 
+        # latexmk 會在同一份 stdout 裡串接多輪 engine 執行。第一輪必然出現
+        # 「citation undefined」「Label(s) may have changed」等警告，而它們正是
+        # 後續幾輪要解決的東西。只採計最後一輪的警告，否則一次成功且交叉引用
+        # 完全正確的編譯，看起來仍像有一堆問題。
+        # 錯誤不受此限：latexmk 出錯即停，且 biber 的錯誤落在 engine 區段之外。
+        engine_banner_pattern = re.compile(r'^This is (XeTeX|pdfTeX|LuaHBTeX|LuaTeX|TeX)\b')
+        lines = output.split('\n')
+        final_pass_start = 0
+        for index, line in enumerate(lines):
+            if engine_banner_pattern.match(line):
+                final_pass_start = index
+
         current_error = None
         current_file = None
 
-        for line in output.split('\n'):
+        for line_index, line in enumerate(lines):
             file_line_match = file_line_error_pattern.search(line)
             if file_line_match:
                 logs.append(CompileLogEntry(
@@ -699,7 +716,9 @@ class CompilerService:
                     current_error = None
                     continue
 
-            # 檢測警告
+            # 檢測警告（只採計最後一輪 engine 執行）
+            if line_index < final_pass_start:
+                continue
             warning_match = warning_pattern.search(line)
             if warning_match:
                 warning_message = warning_match.group(2).strip()

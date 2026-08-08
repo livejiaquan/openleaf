@@ -98,6 +98,8 @@ async def get_project(project_id: str):
                 detail=f"項目 '{project_id}' 不存在"
             )
         return project
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -146,6 +148,8 @@ async def update_project(project_id: str, project_data: ProjectUpdate):
                 )
             return project
         return project_manager.update_main_file(project_id, project_data.main_file)
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -318,9 +322,16 @@ async def delete_project(project_id: str):
                 detail=f"項目 '{project_id}' 不存在"
             )
         return None
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except RuntimeError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
             detail=str(e)
         )
     except Exception as e:

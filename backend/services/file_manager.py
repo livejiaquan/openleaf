@@ -43,6 +43,9 @@ SKIP_EXTENSIONS = {
 }
 SKIP_COMPOUND_SUFFIXES = ('.synctex.gz', '.run.xml')
 
+# 刪除目錄前最多為幾個檔案建立快照（避免刪大目錄時卡住）
+MAX_DIRECTORY_DELETE_SNAPSHOTS = 200
+
 
 def _should_skip_file(name: str) -> bool:
     """判斷是否應該跳過此檔案或目錄"""
@@ -199,14 +202,20 @@ class FileManager:
 
         try:
             if full_path.exists() and full_path.is_file():
-                previous_content = full_path.read_text(encoding="utf-8")
-                if previous_content != content:
-                    self.history_manager.create_snapshot(
-                        project_id,
-                        file_path,
-                        label="Before save",
-                        reason="auto-save",
-                    )
+                # 快照只支援 UTF-8。非 UTF-8 的舊檔（read_file 會以 latin-1 後援讀出）
+                # 不能因此讓儲存整個失敗——否則使用者打得開卻永遠存不回去。
+                try:
+                    previous_content = full_path.read_text(encoding="utf-8")
+                except UnicodeDecodeError:
+                    logger.info("略過非 UTF-8 檔案 '%s' 的儲存前快照", file_path)
+                else:
+                    if previous_content != content:
+                        self.history_manager.create_snapshot(
+                            project_id,
+                            file_path,
+                            label="Before save",
+                            reason="auto-save",
+                        )
             full_path.write_text(content, encoding="utf-8")
             logger.info(f"文件 '{file_path}' 已保存")
             return True
@@ -279,6 +288,7 @@ class FileManager:
 
         try:
             if full_path.is_dir():
+                self._snapshot_directory_contents(project_id, full_path, project_path)
                 shutil.rmtree(full_path)
                 logger.info(f"目錄 '{file_path}' 已刪除")
             else:
@@ -294,6 +304,46 @@ class FileManager:
         except Exception as e:
             logger.error(f"刪除 '{file_path}' 失敗: {e}")
             raise
+
+    def _snapshot_directory_contents(
+        self,
+        project_id: str,
+        directory: Path,
+        project_path: Path,
+    ) -> None:
+        """刪除目錄前，替其中的文字檔逐一建立快照。
+
+        單檔刪除本來就會留快照，但目錄刪除走 shutil.rmtree，
+        原本會把整個 chapters/ 之類的目錄連同內容一次抹掉且無從還原。
+        """
+        taken = 0
+        for current_root, dir_names, file_names in os.walk(directory):
+            current_path = Path(current_root)
+            dir_names[:] = [
+                name for name in dir_names
+                if not _should_skip_file(name) and not (current_path / name).is_symlink()
+            ]
+            for name in sorted(file_names):
+                if taken >= MAX_DIRECTORY_DELETE_SNAPSHOTS:
+                    logger.warning(
+                        "目錄 '%s' 檔案過多，僅為前 %d 個建立刪除前快照",
+                        directory, MAX_DIRECTORY_DELETE_SNAPSHOTS,
+                    )
+                    return
+                candidate = current_path / name
+                if _should_skip_file(name) or candidate.is_symlink():
+                    continue
+                rel_path = candidate.relative_to(project_path).as_posix()
+                try:
+                    self.history_manager.create_snapshot(
+                        project_id,
+                        rel_path,
+                        label="Before delete",
+                        reason="delete",
+                    )
+                    taken += 1
+                except (UnicodeDecodeError, ValueError, OSError) as e:
+                    logger.info("略過 '%s' 的刪除前快照: %s", rel_path, e)
 
     def rename_file(self, project_id: str, old_path: str, new_name: str) -> str:
         """重命名文件或目錄"""

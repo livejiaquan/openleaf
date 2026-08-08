@@ -22,6 +22,9 @@ from services.symbols_manager import symbols_manager
 
 router = APIRouter()
 
+# 單檔上傳大小上限，與 ZIP 匯入的單檔上限一致（services/project_importer.MAX_MEMBER_SIZE）
+MAX_UPLOAD_BYTES = 200 * 1024 * 1024
+
 ALLOWED_UPLOAD_EXTENSIONS = {
     ".tex",
     ".bib",
@@ -199,8 +202,17 @@ async def upload_file(project_id: str, file_path: str, upload: UploadFile = File
     project_id = sanitize_project_id(project_id)
     file_path = sanitize_file_path(file_path)
     validate_upload_extension(file_path, upload.filename)
+    # 先看 Content-Length（可提早退回），實際守門仍是讀入後的長度檢查
+    declared_size = getattr(upload, "size", None)
+    if declared_size is not None and declared_size > MAX_UPLOAD_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="檔案過大（上限 200MB）",
+        )
     try:
         content = await upload.read()
+        if len(content) > MAX_UPLOAD_BYTES:
+            raise ValueError("檔案過大（上限 200MB）")
         file_manager.write_binary_file(project_id, file_path, content)
         return {
             "message": "文件已上傳",

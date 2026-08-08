@@ -139,7 +139,11 @@ class HistoryManager:
 
         snapshots: list[HistorySnapshot] = []
         for item in history_path.glob("*.json"):
-            payload = json.loads(item.read_text(encoding="utf-8"))
+            # 單一損毀的快照檔不該讓整個歷史清單掛掉
+            try:
+                payload = json.loads(item.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError, UnicodeDecodeError):
+                continue
             if file_path is not None and payload.get("file_path") != file_path:
                 continue
             snapshots.append(HistorySnapshot(**payload))

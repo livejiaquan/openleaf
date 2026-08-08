@@ -255,6 +255,12 @@ class ProjectManager:
         if not project_path.exists():
             return False
 
+        # 與 rename/duplicate 一致：編譯中不得刪除，否則會把目錄從執行中的
+        # latexmk 底下抽掉，留下孤兒程序與半刪除狀態。
+        from services.compiler import compiler_service
+        if project_id in compiler_service.active_compilations:
+            raise RuntimeError(f"項目 '{project_id}' 正在編譯中，請稍後再試")
+
         try:
             shutil.rmtree(project_path)
             logger.info(f"項目 '{project_id}' 已刪除")
