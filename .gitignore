@@ -1,0 +1,77 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+dist/
+dist-ssr/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# LaTeX 編譯產物
+*.aux
+*.log
+*.out
+*.toc
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.bbl
+*.blg
+*.pdf
+
+# 項目相關
+# Demo project is tracked; all other projects are ignored
+projects/*/
+!projects/.gitkeep
+!projects/demo/
+
+# Log files
+backend.log
+frontend.log
+openleaf.log
+
+# Environment
+.env
+.env.local
+
+# 臨時文件
+*.tmp
+*.temp
+
+# 截圖 / 測試輸出（開發用）
+.shots/
+.playwright-cli/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# XDV 中間檔
+*.xdv
+
+# SyncTeX
+*.synctex(busy)
+*.synctex.gz(busy)
+
+# biber / biblatex artifacts
+*.bcf
+*.run.xml

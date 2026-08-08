@@ -1,0 +1,155 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Lato', 'Segoe UI',
+    'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Monaco Editor 樣式調整 */
+.monaco-editor {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace !important;
+}
+
+.editor-line-highlight {
+  background: rgba(239, 68, 68, 0.16);
+}
+
+.editor-line-highlight-glyph {
+  background: #ef4444;
+  width: 4px !important;
+  margin-left: 3px;
+}
+
+.editor-settings-drawer {
+  animation: editorSettingsDrawerIn 160ms ease-out;
+}
+
+@keyframes editorSettingsDrawerIn {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* 自定義滾動條 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1b1c1e;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #3a3d42;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #4b4f56;
+}
+
+/* 文件樹樣式 */
+.file-tree-node {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  border-left: 2px solid transparent;
+}
+
+.file-tree-node:hover {
+  background-color: rgba(19, 138, 7, 0.08);
+}
+
+.file-tree-node.selected {
+  background-color: rgba(19, 138, 7, 0.14);
+  border-left-color: #138A07;
+  font-weight: 500;
+}
+
+.dark .file-tree-node {
+  color: #e6e8ea;
+}
+
+.dark .file-tree-node:hover {
+  background-color: rgba(70, 165, 70, 0.14);
+}
+
+.dark .file-tree-node.selected {
+  background-color: rgba(70, 165, 70, 0.2);
+  border-left-color: #46a546;
+}
+
+/* PDF 預覽容器 */
+.pdf-preview-container {
+  background-color: #525659;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow: auto;
+  padding: 20px;
+}
+
+.dark .pdf-preview-container {
+  background-color: #1b1c1e;
+}
+
+/* 編譯日誌樣式 */
+.log-entry {
+  font-size: 12px;
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+}
+
+/* 分割面板 */
+.resizer {
+  background: #cbd5e1;
+  cursor: col-resize;
+  width: 4px;
+  transition: background-color 0.15s ease;
+}
+
+.resizer:hover {
+  background: #94a3b8;
+}
+
+.dark .resizer {
+  background: #3a3d42;
+}
+
+.dark .resizer:hover {
+  background: #46a546;
+}

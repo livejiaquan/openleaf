@@ -1,0 +1,132 @@
+% !TeX program = xelatex
+\documentclass[11pt]{article}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{fontspec}
+\setmainfont{texgyretermes}[
+  Extension=.otf,
+  UprightFont=*-regular,
+  BoldFont=*-bold,
+  ItalicFont=*-italic,
+  BoldItalicFont=*-bolditalic
+]
+\usepackage{amsmath}
+\usepackage[draft,demo]{graphicx}
+\usepackage{booktabs}
+\usepackage{csquotes}
+\usepackage[
+  backend=biber,
+  style=authoryear,
+  sorting=nyt
+]{biblatex}
+\setlength{\emergencystretch}{2em}
+
+\addbibresource{references.bib}
+
+\title{OpenLeaf Demo Document — A Local LaTeX Editor}
+\author{OpenLeaf Project}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+OpenLeaf is a local editing environment for writing, compiling, and reviewing
+LaTeX projects without relying on a hosted service. This demonstration document
+shows a compact but realistic manuscript structure: narrative sections,
+mathematics, a figure placeholder, a summary table, and a bibliography. The
+source is intentionally simple so that it can serve as a clean starting point
+for testing editor behavior, compiler output, and project import workflows.
+\end{abstract}
+
+\section{Purpose}
+
+Technical writing depends on a dependable feedback loop. Authors need source
+files that are easy to navigate, typography that remains consistent across
+machines, and compilation feedback that makes errors actionable. A local LaTeX
+editor can support that loop by keeping the project files transparent while
+offering conveniences such as file browsing, live logs, PDF preview, and project
+templates.
+
+This document focuses on portable conventions. It uses XeLaTeX through
+\texttt{fontspec}, selects TeX Gyre Termes as a widely available serif face, and
+keeps all bibliography data in a separate BibLaTeX database. These choices make
+the project suitable for a public repository while still exercising the main
+features expected in a document preparation workflow.
+
+\section{A Small Model}
+
+LaTeX is often used because it handles structured notation and cross-referenced
+material cleanly. As a simple example, suppose that an author is tracking the
+quality of a writing draft over several compile-and-review cycles. Let
+\(q_t\) denote a normalized quality score after cycle \(t\), and let
+\(\alpha\) represent the fraction of unresolved issues corrected during a
+cycle. A lightweight improvement model is
+\begin{equation}
+  q_{t+1} = q_t + \alpha (1 - q_t),
+  \qquad 0 < \alpha \leq 1.
+\end{equation}
+Solving the recurrence gives the closed form
+\begin{equation}
+  q_t = 1 - (1 - q_0)(1 - \alpha)^t,
+\end{equation}
+which captures the diminishing returns of repeated revisions. The equation is
+not intended as a formal theory of writing; it is included to demonstrate
+display mathematics, inline notation, and the way LaTeX keeps mathematical
+source readable.
+
+\section{Document Elements}
+
+Figure placeholders are useful in early drafts because they reserve space
+before final artwork is available. The \texttt{graphicx} package is loaded in
+draft mode here, so the document can show a placeholder box without requiring a
+real image asset.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.78\linewidth,height=0.28\textheight]{figures/editor-preview.pdf}
+  \caption{Placeholder for an editor and preview workflow diagram.}
+  \label{fig:workflow-placeholder}
+\end{figure}
+
+Table~\ref{tab:features} summarizes the main demonstration features included in
+this source file. The table is intentionally modest: it verifies standard
+tabular rendering without depending on custom classes or external packages
+beyond common LaTeX distributions.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Document features exercised by this demo project.}
+  \label{tab:features}
+  \begin{tabular}{lll}
+    \toprule
+    Area & Example in this file & Purpose \\
+    \midrule
+    Typography & TeX Gyre Termes & Portable serif text rendering \\
+    Mathematics & Display equations & Compiler and preview validation \\
+    Figures & Draft graphic placeholder & Layout without binary assets \\
+    Bibliography & BibLaTeX database & Citation workflow coverage \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Notes on Preparation}
+
+Good document preparation combines structure and restraint. Knuth's work on
+TeX established a precise foundation for digital typesetting, while Lamport's
+LaTeX system made structured authoring practical for a wide technical audience
+\parencite{knuth1984texbook,lamport1994latex}. Later references on typography
+and the LaTeX ecosystem remain useful because they emphasize consistency,
+hierarchy, and maintainable source files
+\parencite{bringhurst2012elements,mittelbach2004companion}.
+
+For a local editor, these principles translate into practical expectations:
+the source tree should be easy to inspect, compile errors should point to the
+right file and line, generated artifacts should stay out of version control,
+and example projects should avoid personal data. A concise demo project helps
+verify those expectations without overwhelming a new user.
+
+\printbibliography
+
+\end{document}
